@@ -1,0 +1,22 @@
+{
+    "name": "elilee/yii2-wx",
+    "description": "一个专注yii2de微信的sdk",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","wx"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Eli lee",
+            "email": "284219451@qq.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0",
+        "yiisoft/yii2-httpclient": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "elilee\\wx\\": ""
+        }
+    }
+}
