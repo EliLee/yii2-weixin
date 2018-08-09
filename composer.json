@@ -1,8 +1,8 @@
 {
-    "name": "elilee/yii2-wx",
+    "name": "elilee/yii2-weixin",
     "description": "一个专注yii2de微信的sdk",
     "type": "yii2-extension",
-    "keywords": ["yii2","extension","wx"],
+    "keywords": ["yii2","extension","weixin"],
     "license": "MIT",
     "authors": [
         {
