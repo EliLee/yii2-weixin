@@ -14,13 +14,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist elilee/yii2-wx "*"
+php composer.phar require --prefer-dist elilee/yii2-weixin "*"
 ```
 
 or add
 
 ```
-"elilee/yii2-wx": "*"
+"elilee/yii2-weixin": "*"
 ```
 
 to the require section of your `composer.json` file.
