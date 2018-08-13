@@ -32,9 +32,9 @@ Setting
 ```
 'wx'=>[
 
-        'app_id' => 'wxe1dfb09bf0d38ab0',
-        'secret' => '336064c6e8bff6af12dd5921d0fc8541',
-        'token'  => 'leelee',
+        'app_id' => 'wxasdasf3slfmiem3mi2f',
+        'secret' => '***************************',
+        'token'  => 'elilee',
 
         'payment' => [
             'mch_id'        => '',//商户ID
