@@ -1,10 +1,6 @@
 wx
 ==
-写在前边, 该扩展根据北哥yii2-wx课程,边学边写的，但不保证和北哥代码完全一致，如果想要深入学习可以到北哥网站（https://nai8.me/）学习相关课程。
-
-之所以建立这个扩展主要是为了自用方便。
-
-一个yii2de微信的sdk (自用)
+一个专注 yii2 de微信的sdk
 
 Installation
 ------------
@@ -14,13 +10,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist elilee/yii2-weixin "*"
+php composer.phar require --prefer-dist elilee/yii2-wx "*"
 ```
 
 or add
 
 ```
-"elilee/yii2-weixin": "*"
+"elilee/yii2-wx": "*"
 ```
 
 to the require section of your `composer.json` file.
@@ -29,7 +25,45 @@ to the require section of your `composer.json` file.
 Usage
 -----
 
-Once the extension is installed, simply use it in your code by  :
+Setting
+-------
+在 params 中增加如下内容
 
-```php
-<?= \elilee\wx\AutoloadExample::widget(); ?>```
+```
+'wx'=>[
+
+        'app_id' => 'wxe1dfb09bf0d38ab0',
+        'secret' => '336064c6e8bff6af12dd5921d0fc8541',
+        'token'  => 'leelee',
+
+        'payment' => [
+            'mch_id'        => '',//商户ID
+            'key'           => '', //商户KEY
+            'notify_url'    => '',//支付通知地址
+            'cert_path'     => '',//证书
+            'key_path'      => '',//证书
+        ]
+    ]
+```
+
+use
+---
+````
+use elilee\wx\Application;
+
+$config = Yii::$app->params['wx'];
+$app = new Application(['conf'=>$config]);
+
+$server=$app->driver('server');
+$response = $server->server();
+
+return $response;
+````
+
+function list
+-------------
+
+用户相关
+支付相关
+客服功能
+红包相关

@@ -9,6 +9,7 @@
 namespace elilee\wx;
 
 use elilee\wx\js\Js;
+use elilee\wx\menu\Menu;
 use elilee\wx\oauth\OAuth;
 use elilee\wx\qrcode\Shorturl;
 use elilee\wx\resource\Resource;
@@ -40,7 +41,8 @@ class Application extends Component
         'resource'=>Resource::class,
         'oauth'=>OAuth::class,
         'js'=>Js::class,
-        'kf'=>Kf::class
+        'kf'=>Kf::class,
+        'menu'=>Menu::class
     ];
 
     public function init()
