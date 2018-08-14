@@ -23,7 +23,7 @@ class OAuth extends Driver
     protected  $openId = false;
 
     public function send(){
-        $url = self::API_URL."?appid=".$this->conf['app_id']."&redirect_uri=".$this->conf['oauth']['callback']."&response_type=code&scope=SCOPE&state=STATE#wechat_redirect";
+        $url = self::API_URL."?appid=".$this->conf['app_id']."&redirect_uri=".$this->conf['oauth']['callback']."&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
         header("location:",$url);
     }
 
@@ -36,7 +36,7 @@ class OAuth extends Driver
             return $this->accessToken;
         }
         $code =$this->getCode(); //用户点击同意授权是回传的一个参数
-        $url =self::API_ACCESS_TOKEN_URL ."?appid={$this->conf['app_id']}&secret{$this->conf['secret']}&code={$code}&grant_type=authorization_code";
+        $url =self::API_ACCESS_TOKEN_URL ."?appid={$this->conf['app_id']}&secret={$this->conf['secret']}&code={$code}&grant_type=authorization_code";
 
         $response =$this->httpClient->createRequest()
             ->setMethod('get')
