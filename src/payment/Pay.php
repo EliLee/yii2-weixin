@@ -58,7 +58,7 @@ class Pay extends Driver
         $attributes['mch_id'] = $this->conf['payment']['mch_id'];
         $attributes['spbill_create_ip'] = $_SERVER['REMOTE_ADDR'];
         $attributes['nonce_str'] = Yii::$app->security->generateRandomString(32);
-        $attributes['sign'] = $this->makeSign($attributes);
+        $attributes['sign'] = Util::makeSign($attributes,$this->conf['payment']['key']);
 
         $xml = $this->toXml($attributes);
         $response = $this->httpClient->createRequest()
@@ -98,7 +98,17 @@ class Pay extends Driver
     }
 
     /**
-     * 原始扫码登录
+     * 原始扫码支付 模式2
+     * 使用方法：
+     *      $attrs = [
+     *          'body'=>'测试商品',
+     *          'out_trade_no'=>"test-".rand(100000,999999),
+     *          'total_fee'=>1,//单位是分
+     *          'notify_url'=>Yii::$app->urlManager->createAbsoluteUrl(['/notify/notify'])
+     *          'product_id'=>'lang-'.rand(100000,999999)
+     *      ];
+     *      $native = $pay ->native($attrs);
+     *      将放回的codeUrl 生成二维码
      * @param array $attributes 原始扫码所需参数
      * @return mixed
      * @throws Exception
@@ -109,6 +119,31 @@ class Pay extends Driver
         return $result;
     }
 
+    /**
+     * 原生扫码支付 模式一 复杂的
+     * 1.先调用 ，生成二维码
+     *  $pay ->nativeDefinedQrcode('lang-'.rand(100000,999999))
+     *  回调生成一个二维码 用户扫码后会通知扫码支付的回调地址
+     *  2.回调方法：（也就是商户平台配置的回调方法）
+     *  $xml = file_get_contents('php://input')
+     *  $data = Xml::parse($xml);
+     *  ......
+     *  $app = new Application(['conf'=>$conf])
+     *  $pay = $app->driver('pay');
+     *  调用$pay->checkSign($data)
+     *      如果成功
+     *      $attributes = [
+     *          'body'=>"产品1",
+     *          'out_trade_no'=>$data['product_id'],
+     *          'total_fee'=>1,
+     *          'notify_url'=>Yii::$app->urlManager->createAbsoluteUrl(['/notify/notify']),
+     *          'product_id'=>'lang-1'
+     *      ];
+     *      return $pay->nativeDefinedResponse($attributes)
+     * @param $productId
+     * @return string
+     * @throws \yii\base\Exception
+     */
 
 
     public function nativeDefinedQrcode($productId){
@@ -127,7 +162,7 @@ class Pay extends Driver
     }
 
     /**
-     * 原生预支付订单
+     * 原生预支付订单（模式一的响应）
      * @param $attributes
      * @return string
      * @throws Exception
@@ -154,6 +189,58 @@ class Pay extends Driver
     }
     /**
      * JSSDK支付
+     *
+     *使用 ：
+     * $attributes = [
+     *      'body'=>'商品1',
+     *      'out_trade_no'=>'vip-'.rand(100000,999999),
+     *      'total_fee' =>1,
+     *      'notify_url'=>Yii::$app->urlManager->createAbsoluteUrl(['/wechat/notify']),
+     *      'openid=>'asddd2d1d1-aff33afsdfsdfFQFsdf'
+     *
+     * ];
+     * ........
+     * $jsapi =$pay ->js($attributes);
+     * if($jsApi['return_code'] =='SUCCESS' && $jsApi['result_code']=='SUCCESS'){
+            $prepayId = $jsApi['prepay_id'];
+     *      $arr= $pay->configForPayment($prepayId);
+     *  return $this->>render('test',[
+     *              'arr'=>$arr]
+     *          )
+     * }
+     *
+     * 在视图中使用
+     * <script >
+     *  function jsApiCall(){
+            WeixinJSBridge.invoke(
+     *          'getBrandWCPayRequest',
+     *          <?= json_encode($arr)?>,
+     *          function(res){
+                    if(res.err_msg === 'get_brand_wcpay_request:ok'){
+     *                  window.location.href=""; //成功后跳转页面
+     *              }else if(res.err_msg === 'get_brand_wcpay_request:cancel'){
+                        weui.alert("支付被取消");
+     *              }else if(res.err_msg === 'get_brand_wcpay_request:fail'){
+                        weui.alert('网络异常')
+     *              }
+     *          }
+     *      );
+     *  }
+     *  function callpay(){
+            if(typeof WeixinJSBridge == 'undefind'){
+     *          if(document.addEventListener){
+                    document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);
+     *          }else if(document.attachEvent){
+                    document.attachEvent('WeixinJSBridgeReady', jsApiCall);
+     *              document.attachEvent('onWeixinJSBridgeReady',jsApiCall);
+     *          }
+     *      }else{
+                jsApiCall();
+     *      }
+     *  }
+     *
+     *  callpay();
+     * </script>
      * @param array $attributes JSSDK 支付需要的参数
      * @return mixed
      * @throws Exception
@@ -180,9 +267,27 @@ class Pay extends Driver
         return (new Notify(['merchant' => $this->conf['payment']]));
     }
 
+    /**
+     * 支付结果通知
+     * 使用：
+     *  ....
+     *  $response =$pay -> handleNotify(function($notify,$isSuccess){
+            if($isSuccess){
+     *          @list(,$id,) =explode('-',$notify['out_trade_no']);
+     *
+     *          //TODO 可以做些业务处理 记录日志
+     *          return true;
+     *      }
+     *  });
+     *
+     * return $response;
+     * @param callable $callback
+     * @return string
+     * @throws Exception
+     */
     public function handleNotify(callable $callback){
         $notify = $this->getNotify();
-
+        //做签名验证
         if(!$notify->checkSign()){
             throw new Exception('签名错误');
         }
@@ -284,7 +389,7 @@ class Pay extends Driver
      * 退款操作
      * @param $outTradeNo string 商户订单号 （$isTransactionId false）/ 微信订单号 （$isTransactionId true）
      * @param bool $isTransactionId
-     * @param $outRefundNo
+     * @param $outRefundNo 退款单号
      * @param $totalFee
      * @param $refundFee
      * @param array $extra
